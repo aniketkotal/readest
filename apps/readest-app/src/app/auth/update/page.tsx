@@ -4,13 +4,14 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { supabase } from '@/utils/supabase';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 export default function UpdateEmailPage() {
   const _ = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
   const { isDarkMode } = useThemeStore();
+  const supabase = getSupabaseBrowserClient();
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);

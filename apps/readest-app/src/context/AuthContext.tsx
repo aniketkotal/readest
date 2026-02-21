@@ -2,7 +2,8 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '@/utils/supabase';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+import { isTauriAppPlatform } from '@/services/environment';
 import posthog from 'posthog-js';
 
 interface AuthContextType {
@@ -31,15 +32,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    const isTauri = isTauriAppPlatform();
+
     const syncSession = (
       session: { access_token: string; refresh_token: string; user: User } | null,
     ) => {
       if (session) {
         console.log('Syncing session');
-        const { access_token, refresh_token, user } = session;
-        localStorage.setItem('token', access_token);
-        localStorage.setItem('refresh_token', refresh_token);
-        localStorage.setItem('user', JSON.stringify(user));
+        const { access_token, user } = session;
+        if (isTauri) {
+          localStorage.setItem('token', access_token);
+          localStorage.setItem('refresh_token', session.refresh_token);
+          localStorage.setItem('user', JSON.stringify(user));
+        } else {
+          localStorage.setItem('token', access_token);
+          localStorage.setItem('user', JSON.stringify(user));
+        }
         posthog.identify(user.id);
         setToken(access_token);
         setUser(user);
@@ -80,6 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     console.log('Logging out');
+    const supabase = getSupabaseBrowserClient();
     try {
       await supabase.auth.refreshSession();
     } catch {
@@ -93,6 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const refresh = async () => {
+    const supabase = getSupabaseBrowserClient();
     try {
       await supabase.auth.refreshSession();
     } catch {}

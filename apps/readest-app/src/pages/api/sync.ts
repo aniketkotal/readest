@@ -8,7 +8,7 @@ import { transformBookNoteToDB } from '@/utils/transform';
 import { transformBookToDB } from '@/utils/transform';
 import { runMiddleware, corsAllMethods } from '@/utils/cors';
 import { SyncData, SyncRecord, SyncResult, SyncType } from '@/libs/sync';
-import { validateUserAndToken } from '@/utils/access';
+import { validateUserAndTokenFromAppRoute } from '@/utils/access';
 import { DBBook, DBBookConfig } from '@/types/records';
 
 const transformsToDB = {
@@ -28,7 +28,7 @@ type TableName = keyof typeof transformsToDB;
 type DBError = { table: TableName; error: PostgrestError };
 
 export async function GET(req: NextRequest) {
-  const { user, token } = await validateUserAndToken(req.headers.get('authorization'));
+  const { user, token } = await validateUserAndTokenFromAppRoute(req);
   if (!user || !token) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
   }
@@ -168,7 +168,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { user, token } = await validateUserAndToken(req.headers.get('authorization'));
+  const { user, token } = await validateUserAndTokenFromAppRoute(req);
   if (!user || !token) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
   }

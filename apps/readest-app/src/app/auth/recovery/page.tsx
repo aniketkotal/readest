@@ -7,13 +7,14 @@ import { useThemeStore } from '@/store/themeStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { Auth } from '@supabase/auth-ui-react';
-import { supabase } from '@/utils/supabase';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 export default function ResetPasswordPage() {
   const _ = useTranslation();
   const router = useRouter();
   const { login } = useAuth();
   const { isDarkMode } = useThemeStore();
+  const supabase = getSupabaseBrowserClient();
 
   const getAuthLocalization = () => {
     return {

@@ -3,7 +3,7 @@ import { createSupabaseAdminClient } from '@/utils/supabase';
 import { corsAllMethods, runMiddleware } from '@/utils/cors';
 import {
   getStoragePlanData,
-  validateUserAndToken,
+  validateUserAndTokenFromPages,
   STORAGE_QUOTA_GRACE_BYTES,
 } from '@/utils/access';
 import { getDownloadSignedUrl, getUploadSignedUrl } from '@/utils/object';
@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { user, token } = await validateUserAndToken(req.headers['authorization']);
+  const { user, token } = await validateUserAndTokenFromPages(req, res);
   if (!user || !token) {
     return res.status(403).json({ error: 'Not authenticated' });
   }

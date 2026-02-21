@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
 import { IAPError } from '@/libs/payment/iap/types';
-import { validateUserAndToken } from '@/utils/access';
+import { validateUserAndTokenFromAppRoute } from '@/utils/access';
 import { getAppleIAPVerifier } from '@/libs/payment/iap/apple/verifier';
 import { processPurchaseData, VerifiedPurchase } from '@/libs/payment/iap/apple/server';
 
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   }
   const { originalTransactionId } = validatedInput!;
 
-  const { user, token } = await validateUserAndToken(request.headers.get('authorization'));
+  const { user, token } = await validateUserAndTokenFromAppRoute(request);
   if (!user || !token) {
     return NextResponse.json({ error: IAPError.NOT_AUTHENTICATED }, { status: 403 });
   }

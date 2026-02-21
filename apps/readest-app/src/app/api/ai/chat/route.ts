@@ -1,10 +1,10 @@
-import { validateUserAndToken } from '@/utils/access';
+import { validateUserAndTokenFromAppRoute } from '@/utils/access';
 import { streamText, createGateway } from 'ai';
 import type { ModelMessage } from 'ai';
 
 export async function POST(req: Request): Promise<Response> {
   try {
-    const { user, token } = await validateUserAndToken(req.headers.get('authorization'));
+    const { user, token } = await validateUserAndTokenFromAppRoute(req);
     if (!user || !token) {
       return Response.json({ error: 'Not authenticated' }, { status: 403 });
     }

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createSupabaseAdminClient } from '@/utils/supabase';
 import { corsAllMethods, runMiddleware } from '@/utils/cors';
-import { validateUserAndToken, getStoragePlanData } from '@/utils/access';
+import { validateUserAndTokenFromPages, getStoragePlanData } from '@/utils/access';
 
 interface StorageStats {
   totalFiles: number;
@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { user, token } = await validateUserAndToken(req.headers['authorization']);
+    const { user, token } = await validateUserAndTokenFromPages(req, res);
     if (!user || !token) {
       return res.status(403).json({ error: 'Not authenticated' });
     }

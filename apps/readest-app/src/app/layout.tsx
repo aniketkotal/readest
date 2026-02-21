@@ -46,6 +46,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={process.env['NEXT_PUBLIC_APP_PLATFORM'] === 'tauri' ? 'edge-to-edge' : ''}
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__READEST_CONFIG__=${JSON.stringify({
+              SUPABASE_URL: process.env['SUPABASE_URL'] || process.env['NEXT_PUBLIC_SUPABASE_URL'] || '',
+              SUPABASE_ANON_KEY: process.env['SUPABASE_ANON_KEY'] || process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY'] || '',
+              API_BASE_URL: process.env['NEXT_PUBLIC_API_BASE_URL'] || '',
+              OBJECT_STORAGE_TYPE: process.env['NEXT_PUBLIC_OBJECT_STORAGE_TYPE'] || '',
+              STORAGE_FIXED_QUOTA: process.env['NEXT_PUBLIC_STORAGE_FIXED_QUOTA'] || '0',
+              TRANSLATION_FIXED_QUOTA: process.env['NEXT_PUBLIC_TRANSLATION_FIXED_QUOTA'] || '0',
+            })};`,
+          }}
+        />
         <title>{title}</title>
         <meta
           name='viewport'

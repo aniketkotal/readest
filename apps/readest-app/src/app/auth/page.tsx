@@ -10,7 +10,7 @@ import { FaApple, FaGithub, FaDiscord } from 'react-icons/fa';
 import { IoArrowBack } from 'react-icons/io5';
 
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/utils/supabase';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { useEnv } from '@/context/EnvContext';
 import { useTheme } from '@/hooks/useTheme';
 import { useThemeStore } from '@/store/themeStore';
@@ -65,6 +65,7 @@ export default function AuthPage() {
   const _ = useTranslation();
   const router = useRouter();
   const { login } = useAuth();
+  const supabase = getSupabaseBrowserClient();
   const { envConfig, appService } = useEnv();
   const { isDarkMode, safeAreaInsets, isRoundedWindow } = useThemeStore();
   const { isTrafficLightVisible } = useTrafficLightStore();
@@ -99,8 +100,8 @@ export default function AuthPage() {
 
   const getWebRedirectTo = () => {
     return process.env.NODE_ENV === 'production'
-      ? WEB_AUTH_CALLBACK
-      : `${window.location.origin}/auth/callback`;
+      ? `${getBaseUrl()}/api/auth/callback`
+      : `${window.location.origin}/api/auth/callback`;
   };
 
   const tauriSignInApple = async () => {

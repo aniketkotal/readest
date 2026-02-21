@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { corsAllMethods, runMiddleware } from '@/utils/cors';
 import { createSupabaseAdminClient } from '@/utils/supabase';
-import { validateUserAndToken } from '@/utils/access';
+import { validateUserAndTokenFromPages } from '@/utils/access';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await runMiddleware(req, res, corsAllMethods);
@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { user, token } = await validateUserAndToken(req.headers['authorization']);
+    const { user, token } = await validateUserAndTokenFromPages(req, res);
     if (!user || !token) {
       return res.status(403).json({ error: 'Not authenticated' });
     }

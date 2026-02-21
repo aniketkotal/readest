@@ -1,18 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/utils/runtimeConfig';
 
-const supabaseUrl =
-  process.env['SUPABASE_URL'] ||
-  process.env['NEXT_PUBLIC_SUPABASE_URL'] ||
-  atob(process.env['NEXT_PUBLIC_DEFAULT_SUPABASE_URL_BASE64']!);
-const supabaseAnonKey =
-  process.env['SUPABASE_ANON_KEY'] ||
-  process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY'] ||
-  atob(process.env['NEXT_PUBLIC_DEFAULT_SUPABASE_KEY_BASE64']!);
+export { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+let _supabase: ReturnType<typeof createClient> | null = null;
+
+export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+  get(_, prop) {
+    if (!_supabase) {
+      _supabase = createClient(getSupabaseUrl(), getSupabaseAnonKey());
+    }
+    return (_supabase as unknown as Record<string, unknown>)[prop as string];
+  },
+});
 
 export const createSupabaseClient = (accessToken?: string) => {
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  return createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
     global: {
       headers: accessToken
         ? {
@@ -25,7 +28,7 @@ export const createSupabaseClient = (accessToken?: string) => {
 
 export const createSupabaseAdminClient = () => {
   const supabaseAdminKey = process.env['SUPABASE_ADMIN_KEY'] || '';
-  return createClient(supabaseUrl, supabaseAdminKey, {
+  return createClient(getSupabaseUrl(), supabaseAdminKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

@@ -1,5 +1,5 @@
 import { User } from '@supabase/supabase-js';
-import { supabase } from '@/utils/supabase';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 interface UseAuthCallbackOptions {
   accessToken?: string | null;
@@ -33,6 +33,7 @@ export function handleAuthCallback({
       return;
     }
 
+    const supabase = getSupabaseBrowserClient();
     const { error: err } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,

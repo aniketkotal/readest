@@ -5,12 +5,12 @@ import {
   createOrUpdatePayment,
   createOrUpdateSubscription,
 } from '@/libs/payment/stripe/server';
-import { validateUserAndToken } from '@/utils/access';
+import { validateUserAndTokenFromAppRoute } from '@/utils/access';
 
 export async function POST(request: Request) {
   const { sessionId } = await request.json();
 
-  const { user, token } = await validateUserAndToken(request.headers.get('authorization'));
+  const { user, token } = await validateUserAndTokenFromAppRoute(request);
   if (!user || !token) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
   }

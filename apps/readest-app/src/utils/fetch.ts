@@ -20,7 +20,7 @@ export const fetchWithAuth = async (url: string, options: RequestInit) => {
     Authorization: `Bearer ${token}`,
   };
 
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, { ...options, headers, credentials: 'include' });
 
   if (!response.ok) {
     const errorData = await response.json();

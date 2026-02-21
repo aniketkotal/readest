@@ -1,9 +1,11 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { jwtDecode } from 'jwt-decode';
 import { supabase } from '@/utils/supabase';
 import { UserPlan } from '@/types/quota';
 import { DEFAULT_DAILY_TRANSLATION_QUOTA, DEFAULT_STORAGE_QUOTA } from '@/services/constants';
 import { isWebAppPlatform } from '@/services/environment';
 import { getDailyUsage } from '@/services/translators/utils';
+import { getStorageFixedQuota, getTranslationFixedQuota } from '@/utils/runtimeConfig';
 
 interface Token {
   plan: UserPlan;
@@ -36,7 +38,7 @@ export const getStoragePlanData = (token: string) => {
   const plan = data['plan'] || 'free';
   const usage = data['storage_usage_bytes'] || 0;
   const purchasedQuota = data['storage_purchased_bytes'] || 0;
-  const fixedQuota = parseInt(process.env['NEXT_PUBLIC_STORAGE_FIXED_QUOTA'] || '0');
+  const fixedQuota = parseInt(getStorageFixedQuota() || '0');
   const planQuota = fixedQuota || DEFAULT_STORAGE_QUOTA[plan] || DEFAULT_STORAGE_QUOTA['free'];
   const quota = planQuota + purchasedQuota;
 
@@ -63,7 +65,7 @@ export const getTranslationPlanData = (token: string) => {
 export const getDailyTranslationPlanData = (token: string) => {
   const data = jwtDecode<Token>(token) || {};
   const plan = data['plan'] || 'free';
-  const fixedQuota = parseInt(process.env['NEXT_PUBLIC_TRANSLATION_FIXED_QUOTA'] || '0');
+  const fixedQuota = parseInt(getTranslationFixedQuota() || '0');
   const quota =
     fixedQuota || DEFAULT_DAILY_TRANSLATION_QUOTA[plan] || DEFAULT_DAILY_TRANSLATION_QUOTA['free'];
 
@@ -74,20 +76,22 @@ export const getDailyTranslationPlanData = (token: string) => {
 };
 
 export const getAccessToken = async (): Promise<string | null> => {
-  // In browser context there might be two instances of supabase one in the app route
-  // and the other in the pages route, and they might have different sessions
-  // making the access token invalid for API calls. In that case we should use localStorage.
-  if (isWebAppPlatform()) {
-    return localStorage.getItem('token') ?? null;
+  if (isWebAppPlatform() && typeof window !== 'undefined') {
+    const { getSupabaseBrowserClient } = await import('@/utils/supabase/client');
+    const client = getSupabaseBrowserClient();
+    const { data } = await client.auth.getSession();
+    return data?.session?.access_token ?? localStorage.getItem('token') ?? null;
   }
   const { data } = await supabase.auth.getSession();
   return data?.session?.access_token ?? null;
 };
 
 export const getUserID = async (): Promise<string | null> => {
-  if (isWebAppPlatform()) {
-    const user = localStorage.getItem('user') ?? '{}';
-    return JSON.parse(user).id ?? null;
+  if (isWebAppPlatform() && typeof window !== 'undefined') {
+    const { getSupabaseBrowserClient } = await import('@/utils/supabase/client');
+    const client = getSupabaseBrowserClient();
+    const { data } = await client.auth.getSession();
+    return data?.session?.user?.id ?? null;
   }
   const { data } = await supabase.auth.getSession();
   return data?.session?.user?.id ?? null;
@@ -104,4 +108,47 @@ export const validateUserAndToken = async (authHeader: string | null | undefined
 
   if (error || !user) return {};
   return { user, token };
+};
+
+export const validateUserAndTokenFromPages = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+) => {
+  const { getSupabasePagesClient } = await import('@/utils/supabase/pages');
+  const supabasePages = getSupabasePagesClient(req, res);
+  const { data: { user }, error } = await supabasePages.auth.getUser();
+
+  if (!error && user) {
+    const { data: { session } } = await supabasePages.auth.getSession();
+    if (session?.access_token) {
+      return { user, token: session.access_token };
+    }
+  }
+
+  const authHeader = req.headers['authorization'];
+  if (authHeader) {
+    return validateUserAndToken(typeof authHeader === 'string' ? authHeader : authHeader[0]);
+  }
+
+  return {};
+};
+
+export const validateUserAndTokenFromAppRoute = async (request: Request) => {
+  const { getSupabaseServerClient } = await import('@/utils/supabase/server');
+  const supabaseServer = await getSupabaseServerClient();
+  const { data: { user }, error } = await supabaseServer.auth.getUser();
+
+  if (!error && user) {
+    const { data: { session } } = await supabaseServer.auth.getSession();
+    if (session?.access_token) {
+      return { user, token: session.access_token };
+    }
+  }
+
+  const authHeader = request.headers.get('authorization');
+  if (authHeader) {
+    return validateUserAndToken(authHeader);
+  }
+
+  return {};
 };

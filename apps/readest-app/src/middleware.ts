@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { updateSession } from '@/utils/supabase/middleware';
 
 const allowedOrigins = [
   'https://web.readest.com',
@@ -12,10 +13,11 @@ const allowedOrigins = [
 const corsOptions = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': '*',
+  'Access-Control-Allow-Credentials': 'true',
   'Access-Control-Max-Age': '86400',
 };
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const origin = request.headers.get('origin') ?? '';
   const isAllowedOrigin = allowedOrigins.includes(origin);
 
@@ -31,7 +33,7 @@ export function middleware(request: NextRequest) {
     });
   }
 
-  const response = NextResponse.next();
+  const response = await updateSession(request);
 
   if (isAllowedOrigin) {
     response.headers.set('Access-Control-Allow-Origin', origin);
@@ -45,5 +47,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/:path*', '/api/stripe/:path*', '/api/metadata/:path*'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 };

@@ -5,7 +5,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import {
   getDailyTranslationPlanData,
   getSubscriptionPlan,
-  validateUserAndToken,
+  validateUserAndTokenFromPages,
 } from '@/utils/access';
 import { ErrorCodes } from '@/services/translators';
 import { UsageStatsManager } from '@/utils/usage';
@@ -86,7 +86,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const env = (getCloudflareContext().env || {}) as CloudflareEnv;
   const hasKVCache = !!env['TRANSLATIONS_KV'];
 
-  const { user, token } = await validateUserAndToken(req.headers['authorization']);
+  const { user, token } = await validateUserAndTokenFromPages(req, res);
   const { DEEPL_PRO_API, DEEPL_FREE_API } = process.env;
   const deepFreeApiUrl = DEEPL_FREE_API || DEFAULT_DEEPL_FREE_API;
   const deeplProApiUrl = DEEPL_PRO_API || DEFAULT_DEEPL_PRO_API;

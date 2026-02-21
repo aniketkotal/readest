@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
-import { validateUserAndToken } from '@/utils/access';
+import { validateUserAndTokenFromAppRoute } from '@/utils/access';
 import { getGoogleIAPVerifier, VerifyPurchaseParams } from '@/libs/payment/iap/google/verifier';
 import { processPurchaseData, VerifiedPurchase } from '@/libs/payment/iap/google/server';
 import { IAPError } from '@/libs/payment/iap/types';
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   }
   const { orderId, purchaseToken, productId, packageName } = validatedInput!;
 
-  const { user, token } = await validateUserAndToken(request.headers.get('authorization'));
+  const { user, token } = await validateUserAndTokenFromAppRoute(request);
   if (!user || !token) {
     return NextResponse.json({ error: IAPError.NOT_AUTHENTICATED }, { status: 403 });
   }
