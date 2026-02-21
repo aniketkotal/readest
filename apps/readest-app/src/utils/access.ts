@@ -134,8 +134,8 @@ export const validateUserAndTokenFromPages = async (
 };
 
 export const validateUserAndTokenFromAppRoute = async (request: Request) => {
-  const { getSupabaseServerClient } = await import('@/utils/supabase/server');
-  const supabaseServer = await getSupabaseServerClient();
+  const { getSupabaseRequestClient } = await import('@/utils/supabase/request');
+  const supabaseServer = getSupabaseRequestClient(request);
   const { data: { user }, error } = await supabaseServer.auth.getUser();
 
   if (!error && user) {
